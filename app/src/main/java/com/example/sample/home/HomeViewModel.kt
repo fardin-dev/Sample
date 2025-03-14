@@ -3,6 +3,7 @@ package com.example.sample.home
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.sample.data.api.model.PokemonDetailsModel
 import com.example.sample.data.api.model.PokemonListModel
 import com.example.sample.data.repository.PokemonRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -19,10 +20,17 @@ class HomeViewModel @Inject constructor(
     private val _pokemonList = MutableStateFlow<PokemonListModel?>(null)
     private val _errorMessage = MutableStateFlow<String?>(null)
     private val _isLoading = MutableStateFlow(true)
+    private val _pokemonDetails = MutableStateFlow<PokemonDetailsModel?>(null)
+    private val _gotError = MutableStateFlow<Boolean>(false)
+
 
     val pokemonList: StateFlow<PokemonListModel?> get() = _pokemonList.asStateFlow()
     val errorMessage: StateFlow<String?> get() = _errorMessage.asStateFlow()
     val isLoading: StateFlow<Boolean> get() = _isLoading.asStateFlow()
+    val pokemonDetails: StateFlow<PokemonDetailsModel?> get() = _pokemonDetails.asStateFlow()
+    val gotError: StateFlow<Boolean> get() = _gotError.asStateFlow()
+
+
 
      init {
         getPokemonList()
@@ -44,6 +52,36 @@ class HomeViewModel @Inject constructor(
                     _isLoading.value = false
                     _errorMessage.value = error.toString()
                 }
+            }
+        }
+    }
+
+    fun fetchDetails(name: String) {
+// Start in another thread
+        viewModelScope.launch {
+// Loading state
+            _isLoading.value = true
+            val result = pokemonRepo.getPokemonDetails(name)
+            val error = result.errorBody()
+            val data = result.body()
+            if (error != null || !result.isSuccessful) {
+// Handle error state
+                Log.d("Got an error", "Got an error")
+                _isLoading.value = false
+                _errorMessage.value = error.toString()
+                _gotError.value = true
+                return@launch
+            }
+            if (data != null) {
+// Handle success case
+                Log.d("Got data", "Got data")
+                _isLoading.value = false
+                _pokemonDetails.value = data
+                _gotError.value = false
+            } else {
+// Handle empty data
+                Log.d("Got nothing", "Got data")
+                _isLoading.value = false
             }
         }
     }
