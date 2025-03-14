@@ -11,6 +11,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.compose.rememberNavController
 import com.example.sample.home.HomeScreen
 import com.example.sample.ui.theme.SampleTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -24,7 +25,8 @@ class MainActivity : ComponentActivity() {
             SampleTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     HomeScreen(
-                        modifier = Modifier.padding(innerPadding)
+                        modifier = Modifier.padding(innerPadding),
+                        navController = rememberNavController(),
                     )
                 }
             }

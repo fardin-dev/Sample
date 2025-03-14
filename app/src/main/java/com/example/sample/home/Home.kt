@@ -1,12 +1,17 @@
 package com.example.sample.home
 
-import android.util.Log
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -14,84 +19,110 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.sample.data.api.model.PokemonListModel
+
 
 @Composable
 fun HomeScreen(
     modifier: Modifier = Modifier,
-    homeViewModel: HomeViewModel = hiltViewModel()
+    navController: NavController,
+    viewModel: HomeViewModel = hiltViewModel()
 ) {
-    val state by homeViewModel.pokemonList.collectAsState()
+    val pokemonList = viewModel.pokemonList.collectAsState()
+    val isLoading = viewModel.isLoading.collectAsState()
+    val errorMessage = viewModel.errorMessage.collectAsState()
 
-    LazyColumn {
-        Log.d("Home", "HomeScreen called")
-        if (homeViewModel.isLoading.value) {
-            item {
-                CircularProgressIndicator(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .wrapContentSize(align = Alignment.Center)
-                )
+    Scaffold(
+        modifier = modifier.background(MaterialTheme.colorScheme.background),
+        topBar = {
+            Text(
+                text = "Pokemon List",
+                style = MaterialTheme.typography.displaySmall,
+                color = MaterialTheme.colorScheme.onSurface,
+                fontWeight = FontWeight.Medium,
+            )
+        },
 
-                Text(text = "Testing...")
+        ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .padding(innerPadding)
+                .fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Top
+        ) {
+            Button(
+                onClick = { viewModel.getPokemonList() }
+            ) {
+                Text(text = "Reload")
             }
 
-        }
-
-        state?.let {
-            items(it.count) { it ->
-                CharacterImageCard(it, state!!)
+            if (errorMessage.value != null) {
+                ErrorState()
+            } else if (isLoading.value) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(40.dp),
+                        color = Color.Blue,
+                        trackColor = Color.Red
+                    )
+                }
+            } else {
+                LazyColumn {
+                    pokemonList.value?.let { results ->
+                        items(results.results.size) { index ->
+                            val name = results.results[index].name
+                            PokemonCell(
+                                modifier = Modifier
+                                    .clickable {
+                                        navController.navigate("details/$name")
+                                    },
+                                index = "$index",
+                                name = name
+                            )
+                        }
+                    }
+                }
             }
         }
-
-
     }
-
 }
 
 @Composable
-fun CharacterImageCard(index: Int, character: PokemonListModel) {
-    val imagerPainter = rememberAsyncImagePainter(model = character.results[index].url)
-
-    Card(
-        shape = MaterialTheme.shapes.medium,
-        modifier = Modifier.padding(16.dp)
+private fun PokemonCell(
+    modifier: Modifier = Modifier,
+    index: String,
+    name: String
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(64.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.Start
     ) {
-        Box {
-
-            Image(
-                painter = imagerPainter,
-                contentDescription = null,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(200.dp),
-                contentScale = ContentScale.FillBounds
-            )
-
-            Surface(
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = .3f),
-                modifier = Modifier.align(Alignment.BottomCenter),
-                contentColor = MaterialTheme.colorScheme.surface
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(4.dp)
-                ) {
-                    Text(text = "Real name: ${character.results.get(index).name}")
-                }
-            }
-
+        Row(
+            modifier = Modifier.padding(start = 20.dp),
+            horizontalArrangement = Arrangement.Start,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(text = index, fontSize = 20.sp)
+            Text(text = name, fontSize = 20.sp, modifier = Modifier.padding(start = 16.dp))
         }
-
+        HorizontalDivider(color = Color.Gray, modifier = Modifier.padding(top = 20.dp))
     }
-
 }
-
 
 
 
