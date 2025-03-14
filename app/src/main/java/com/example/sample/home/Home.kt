@@ -35,6 +35,7 @@ import coil.request.ImageRequest
 import coil.transform.CircleCropTransformation
 import com.example.sample.data.api.model.PokemonDetailsModel
 import com.example.sample.data.api.model.PokemonListItem
+import java.util.Locale
 
 @Composable
 fun HomeScreen(

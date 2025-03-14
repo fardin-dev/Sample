@@ -57,15 +57,12 @@ class HomeViewModel @Inject constructor(
     }
 
     fun fetchDetails(name: String) {
-// Start in another thread
         viewModelScope.launch {
-// Loading state
             _isLoading.value = true
             val result = pokemonRepo.getPokemonDetails(name)
             val error = result.errorBody()
             val data = result.body()
             if (error != null || !result.isSuccessful) {
-// Handle error state
                 Log.d("Got an error", "Got an error")
                 _isLoading.value = false
                 _errorMessage.value = error.toString()
@@ -73,13 +70,11 @@ class HomeViewModel @Inject constructor(
                 return@launch
             }
             if (data != null) {
-// Handle success case
                 Log.d("Got data", "Got data")
                 _isLoading.value = false
                 _pokemonDetails.value = data
                 _gotError.value = false
             } else {
-// Handle empty data
                 Log.d("Got nothing", "Got data")
                 _isLoading.value = false
             }
