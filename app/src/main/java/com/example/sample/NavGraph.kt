@@ -15,9 +15,9 @@ import com.example.sample.home.PokemonDetailsScreen
 @Composable
 fun NavGraph(navController: NavHostController = rememberNavController()) {
     NavHost(navController = navController, startDestination = "list") {
-        composable("list") { HomeScreen(navController = navController) }
+        composable(route = "list") { HomeScreen(navController = navController) }
         composable(
-            "details/{id}",
+            route = "details/{id}",
             arguments = listOf(navArgument("id") { type = NavType.StringType }),
             enterTransition = {
                 slideIntoContainer(
